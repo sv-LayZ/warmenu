@@ -1,15 +1,6 @@
 WarMenu = { }
 WarMenu.__index = WarMenu
 
--- Deprecated
-WarMenu.debug = false
-function WarMenu.SetDebugEnabled(enabled)
-end
-function WarMenu.IsDebugEnabled()
-	return false
-end
----
-
 local menus = { }
 local keys = { down = 187, up = 188, left = 189, right = 190, select = 191, back = 194 }
 local optionCount = 0
@@ -251,8 +242,8 @@ local function drawButton(text, subText)
 		drawText(subText, getStyleProperty('x') + buttonTextXOffset, y - buttonHeight / 2 + buttonTextYOffset)
 	end
 end
-
-function WarMenu.CreateMenu(id, title, subTitle, style)
+-- Start exporting
+exports('CreateMenu', function(id, title, subTitle, style)
 	-- Default settings
 	local menu = { }
 
@@ -269,15 +260,15 @@ function WarMenu.CreateMenu(id, title, subTitle, style)
 	end
 
 	menus[id] = menu
-end
+end)
 
-function WarMenu.CreateSubMenu(id, parent, subTitle, style)
+exports('CreateSubMenu', function(id, parent, subTitle, style)
 	local parentMenu = menus[parent]
 	if not parentMenu then
 		return
 	end
 
-	WarMenu.CreateMenu(id, parentMenu.title, subTitle and string.upper(subTitle) or parentMenu.subTitle)
+	exports.warmenu:CreateMenu(id, parentMenu.title, subTitle and string.upper(subTitle) or parentMenu.subTitle)
 
 	local menu = menus[id]
 
@@ -292,42 +283,38 @@ function WarMenu.CreateSubMenu(id, parent, subTitle, style)
 	elseif parentMenu.style then
 		menu.style = copyTable(parentMenu.style)
 	end
-end
+end)
 
-function WarMenu.CurrentMenu()
+exports('CurrentMenu', function()
 	return currentMenu and currentMenu.id or nil
-end
+end)
 
-function WarMenu.OpenMenu(id)
+exports('OpenMenu', function(id)
 	if id and menus[id] then
 		PlaySoundFrontend(-1, 'SELECT', 'HUD_FRONTEND_DEFAULT_SOUNDSET', true)
 		setMenuVisible(id, true)
 	end
-end
+end)
 
-function WarMenu.IsMenuOpened(id)
+exports('Begin', function(id)
 	return currentMenu and currentMenu.id == id
-end
-WarMenu.Begin = WarMenu.IsMenuOpened
+end)
+-- WarMenu.Begin = WarMenu.IsMenuOpened
 
-function WarMenu.IsAnyMenuOpened()
+exports('IsAnyMenuOpened', function()
 	return currentMenu ~= nil
-end
+end)
 
-function WarMenu.IsMenuAboutToBeClosed()
-	return false
-end
-
-function WarMenu.CloseMenu()
+exports('CloseMenu', function()
 	if currentMenu then
 		setMenuVisible(currentMenu.id, false)
 		optionCount = 0
 		currentKey = nil
 		PlaySoundFrontend(-1, 'QUIT', 'HUD_FRONTEND_DEFAULT_SOUNDSET', true)
 	end
-end
+end)
 
-function WarMenu.ToolTip(text, width, flipHorizontal)
+exports('ToolTip', function(text, width, flipHorizontal)
 	if not currentMenu then
 		return
 	end
@@ -357,9 +344,9 @@ function WarMenu.ToolTip(text, width, flipHorizontal)
 
 	y = y - (height / 2) + buttonTextYOffset
 	drawText(text, textX, y)
-end
+end)
 
-function WarMenu.Button(text, subText)
+exports('Button', function(text, subText)
 	if not currentMenu then
 		return
 	end
@@ -380,14 +367,14 @@ function WarMenu.Button(text, subText)
 	end
 
 	return pressed
-end
+end)
 
-function WarMenu.SpriteButton(text, dict, name, r, g, b, a)
+exports('SpriteButton', function(text, dict, name, r, g, b, a)
 	if not currentMenu then
 		return
 	end
 
-	local pressed = WarMenu.Button(text)
+	local pressed = exports.warmenu:Button(text)
 
 	local currentIndex = getCurrentIndex()
 	if not currentIndex then
@@ -400,14 +387,14 @@ function WarMenu.SpriteButton(text, dict, name, r, g, b, a)
 	DrawSprite(dict, name, getStyleProperty('x') + getStyleProperty('width') - spriteWidth / 2 - buttonSpriteXOffset, getStyleProperty('y') + titleHeight + buttonHeight + (buttonHeight * currentIndex) - spriteHeight / 2 + buttonSpriteYOffset, spriteWidth, spriteHeight, 0., r or 255, g or 255, b or 255, a or 255)
 
 	return pressed
-end
+end)
 
-function WarMenu.InputButton(text, windowTitleEntry, defaultText, maxLength, subText)
+exports('InputButton', function(text, windowTitleEntry, defaultText, maxLength, subText)
 	if not currentMenu then
 		return
 	end
 
-	local pressed = WarMenu.Button(text, subText)
+	local pressed = exports.warmenu:Button(text, subText)
 	local inputText = nil
 
 	if pressed then
@@ -429,14 +416,14 @@ function WarMenu.InputButton(text, windowTitleEntry, defaultText, maxLength, sub
 	end
 
 	return pressed, inputText
-end
+end)
 
-function WarMenu.MenuButton(text, id, subText)
+exports('MenuButton', function(text, id, subText)
 	if not currentMenu then
 		return
 	end
 
-	local pressed = WarMenu.Button(text, subText)
+	local pressed = exports.warmenu:Button(text, subText)
 
 	if pressed then
 		currentMenu.currentOption = optionCount
@@ -445,9 +432,9 @@ function WarMenu.MenuButton(text, id, subText)
 	end
 
 	return pressed
-end
+end)
 
-function WarMenu.CheckBox(text, checked, callback)
+exports('CheckBox', function(text, checked, callback)
 	if not currentMenu then
 		return
 	end
@@ -459,7 +446,7 @@ function WarMenu.CheckBox(text, checked, callback)
 		name = checked and 'shop_box_tick' or 'shop_box_blank'
 	end
 
-	local pressed = WarMenu.SpriteButton(text, 'commonmenu', name)
+	local pressed = exports.warmenu:SpriteButton(text, 'commonmenu', name)
 
 	if pressed then
 		checked = not checked
@@ -467,9 +454,9 @@ function WarMenu.CheckBox(text, checked, callback)
 	end
 
 	return pressed
-end
+end)
 
-function WarMenu.ComboBox(text, items, currentIndex, selectedIndex, callback)
+exports('ComboBox', function(text, items, currentIndex, selectedIndex, callback)
 	if not currentMenu then
 		return
 	end
@@ -483,7 +470,7 @@ function WarMenu.ComboBox(text, items, currentIndex, selectedIndex, callback)
 		selectedItem = '← '..tostring(selectedItem)..' →'
 	end
 
-	local pressed = WarMenu.Button(text, selectedItem)
+	local pressed = exports.warmenu:Button(text, selectedItem)
 
 	if pressed then
 		selectedIndex = currentIndex
@@ -497,9 +484,9 @@ function WarMenu.ComboBox(text, items, currentIndex, selectedIndex, callback)
 
 	if callback then callback(currentIndex, selectedIndex) end
 	return pressed, currentIndex
-end
+end)
 
-function WarMenu.Display()
+exports('End', function()
 	if currentMenu then
 		DisableControlAction(0, keys.left, true)
 		DisableControlAction(0, keys.up, true)
@@ -541,105 +528,105 @@ function WarMenu.Display()
 				setMenuVisible(currentMenu.previousMenu, true)
 				PlaySoundFrontend(-1, 'BACK', 'HUD_FRONTEND_DEFAULT_SOUNDSET', true)
 			else
-				WarMenu.CloseMenu()
+				exports.warmenu:CloseMenu()
 			end
 		end
 
 		optionCount = 0
 	end
-end
-WarMenu.End = WarMenu.Display
+end)
+-- WarMenu.End = WarMenu.Display
 
-function WarMenu.CurrentOption()
+exports('CurrentOption', function()
 	if currentMenu and optionCount ~= 0 then
 		return currentMenu.currentOption
 	end
 
 	return nil
-end
+end)
 
-function WarMenu.IsItemHovered()
+exports('IsItemHovered', function()
 	if not currentMenu or optionCount == 0 then
 		return false
 	end
 
 	return currentMenu.currentOption == optionCount
-end
+end)
 
-function WarMenu.IsItemSelected()
-	return currentKey == keys.select and WarMenu.IsItemHovered()
-end
+exports('IsItemSelected', function()
+	return currentKey == keys.select and exports.warmenu:IsItemHovered()
+end)
 
-function WarMenu.SetTitle(id, title)
+exports('SetTitle', function(id, title)
 	setMenuProperty(id, 'title', title)
-end
-WarMenu.SetMenuTitle = WarMenu.SetTitle
+end)
+-- WarMenu.SetMenuTitle = WarMenu.SetTitle
 
-function WarMenu.SetSubTitle(id, text)
+exports('SetMenuSubTitle', function(id, text)
 	setMenuProperty(id, 'subTitle', string.upper(text))
-end
-WarMenu.SetMenuSubTitle = WarMenu.SetSubTitle
+end)
+--WarMenu.SetMenuSubTitle = WarMenu.SetSubTitle
 
-function WarMenu.SetMenuStyle(id, style)
+exports('SetMenuStyle', function(id, style)
 	setMenuProperty(id, 'style', style)
-end
+end)
 
-function WarMenu.SetMenuX(id, x)
+exports('SetMenuX', function(id, x)
 	setStyleProperty(id, 'x', x)
-end
+end)
 
-function WarMenu.SetMenuY(id, y)
+exports('SetMenuY', function(id, y)
 	setStyleProperty(id, 'y', y)
-end
+end)
 
-function WarMenu.SetMenuWidth(id, width)
+exports('SetMenuWidth', function(id, width)
 	setStyleProperty(id, 'width', width)
-end
+end)
 
-function WarMenu.SetMenuMaxOptionCountOnScreen(id, count)
+exports('SetMenuMaxOptionCountOnScreen', function(id, count)
 	setStyleProperty(id, 'maxOptionCountOnScreen', count)
-end
+end)
 
-function WarMenu.SetTitleColor(id, r, g, b, a)
+exports('SetMenuTitleColor', function(id, r, g, b, a)
 	setStyleProperty(id, 'titleColor', { r, g, b, a })
-end
-WarMenu.SetMenuTitleColor = WarMenu.SetTitleColor
+end)
+-- WarMenu.SetMenuTitleColor = WarMenu.SetTitleColor
 
-function WarMenu.SetMenuSubTitleColor(id, r, g, b, a)
+exports('SetMenuSubTitleColor', function(id, r, g, b, a)
 	setStyleProperty(id, 'subTitleColor', { r, g, b, a })
-end
+end)
 
-function WarMenu.SetTitleBackgroundColor(id, r, g, b, a)
+exports('SetMenuTitleBackgroundColor', function(id, r, g, b, a)
 	setStyleProperty(id, 'titleBackgroundColor', { r, g, b, a })
-end
-WarMenu.SetMenuTitleBackgroundColor = WarMenu.SetTitleBackgroundColor
+end)
+--WarMenu.SetMenuTitleBackgroundColor = WarMenu.SetTitleBackgroundColor
 
-function WarMenu.SetTitleBackgroundSprite(id, dict, name)
+exports('SetTitleBackgroundSprite', function(id, dict, name)
 	RequestStreamedTextureDict(dict)
 	setStyleProperty(id, 'titleBackgroundSprite', { dict = dict, name = name })
-end
-WarMenu.SetMenuTitleBackgroundSprite = WarMenu.SetTitleBackgroundSprite
+end)
+--WarMenu.SetMenuTitleBackgroundSprite = WarMenu.SetTitleBackgroundSprite
 
-function WarMenu.SetMenuBackgroundColor(id, r, g, b, a)
+exports('SetMenuBackgroundColor', function(id, r, g, b, a)
 	setStyleProperty(id, 'backgroundColor', { r, g, b, a })
-end
+end)
 
-function WarMenu.SetMenuTextColor(id, r, g, b, a)
+exports('SetMenuTextColor', function(id, r, g, b, a)
 	setStyleProperty(id, 'textColor', { r, g, b, a })
-end
+end)
 
-function WarMenu.SetMenuSubTextColor(id, r, g, b, a)
+exports('SetMenuSubTextColor', function(id, r, g, b, a)
 	setStyleProperty(id, 'subTextColor', { r, g, b, a })
-end
+end)
 
-function WarMenu.SetMenuFocusColor(id, r, g, b, a)
+exports('SetMenuFocusColor', function(id, r, g, b, a)
 	setStyleProperty(id, 'focusColor', { r, g, b, a })
-end
+end)
 
-function WarMenu.SetMenuFocusTextColor(id, r, g, b, a)
+exports('SetMenuFocusTextColor', function(id, r, g, b, a)
 	setStyleProperty(id, 'focusTextColor', { r, g, b, a })
-end
+end)
 
-function WarMenu.SetMenuButtonPressedSound(id, name, set)
+exports('SetMenuButtonPressedSound', function(id, name, set)
 	setStyleProperty(id, 'buttonPressedSound', { name = name, set = set })
-end
+end)
